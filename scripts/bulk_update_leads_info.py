@@ -10,6 +10,44 @@ import logging
 from closeio_api import Client as CloseIO_API, APIError
 from dateutil.parser import parse as parse_date
 
+
+VALID_FIELDS = (
+    'lead_id',
+    'company',
+    'url',
+    'description',
+    'status',
+    'note[0-9]',
+    'address[0-9]_country',
+    'address[0-9]_city',
+    'address[0-9]_zipcode',
+    'address[0-9]_label',
+    'address[0-9]_state',
+    'address[0-9]_address_1',
+    'address[0-9]_address_2',
+    'opportunity[0-9]_note',
+    'opportunity[0-9]_value',
+    'opportunity[0-9]_value_period',
+    'opportunity[0-9]_confidence',
+    'opportunity[0-9]_status',
+    'opportunity[0-9]_date_won',
+    'contact[0-9]_name',
+    'contact[0-9]_title',
+    'contact[0-9]_phone[0-9]',
+    'contact[0-9]_email[0-9]',
+    'contact[0-9]_url[0-9]',
+    'custom\.\S+'
+)
+
+
+def is_valid_column(name):
+    for x in VALID_FIELDS:
+        if re.match(x, name):
+            return True
+    return False
+
+
+
 OPPORTUNITY_FIELDS = ['opportunity%s_note',
                       'opportunity%s_value',
                       'opportunity%s_value_period',
@@ -94,6 +132,10 @@ args.csvfile.seek(0)
 c = csv.DictReader(args.csvfile, dialect=dialect)
 assert any(x in ('company', 'lead_id') for x in c.fieldnames), \
     'ERROR: column "company" or "lead_id" is not found'
+
+for fieldname in c.fieldnames:
+    assert is_valid_column(fieldname), \
+    'ERROR: invalid column %s' % fieldname
 
 
 api = CloseIO_API(args.api_key, development=args.development)
